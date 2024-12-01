@@ -1,9 +1,115 @@
 const dom = {
   createStatsDiv() {
+    // Create floating button
+    const floatingBtn = document.createElement('div');
+    floatingBtn.id = 'wallet-stats-toggle';
+
+    // Try to use browser-specific runtime API, fallback to emoji if not available
+    const getExtensionUrl = () => {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+        return chrome.runtime.getURL('icons/icon128.png');
+      }
+      if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) {
+        return browser.runtime.getURL('icons/icon128.png');
+      }
+      return null;
+    };
+
+    const iconUrl = getExtensionUrl();
+    floatingBtn.innerHTML = iconUrl
+      ? `<img src="${iconUrl}" style="width: 24px; height: 24px;" onerror="this.innerHTML='📊'" />`
+      : '📊';
+    floatingBtn.style.cssText = `
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 9999;
+      font-size: 20px;
+      transition: all 0.3s ease;
+    `;
+
+    // Create sliding panel
     const statsDiv = document.createElement('div');
     statsDiv.id = 'wallet-stats';
     statsDiv.className = 'p-show__widget p-show__info u-p-0 u-mb-xs u-mb-0-lg';
-    statsDiv.style.marginTop = '20px';
+    statsDiv.style.cssText = `
+      position: fixed;
+      right: -400px;
+      top: 0;
+      width: 400px;
+      height: 100vh;
+      background: #1a1a1a;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+      transition: right 0.3s ease;
+      z-index: 9998;
+      overflow-y: auto;
+      padding: 20px;
+    `;
+
+    // Add close button
+    const closeBtn = document.createElement('div');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #fff;
+      opacity: 0.7;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      body {
+        min-width: 100vw!important;
+        transition: margin-left 0.3s ease !important;
+        position: relative;
+      }
+      body.wallet-stats-open {
+        margin-left: -400px !important;
+      }
+      body.wallet-stats-open .l-wrapper,
+      body.wallet-stats-open .l-container,
+      body.wallet-stats-open .p-show,
+      body.wallet-stats-open .p-show__content {
+        width: calc(100% - 400px) !important;
+        transition: width 0.3s ease !important;
+      }
+      #wallet-stats {
+        position: fixed;
+        right: -400px;
+        top: 0;
+        width: 400px;
+        height: 100vh;
+        background: #1a1a1a;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+        transition: right 0.3s ease;
+        z-index: 9998;
+        overflow-y: auto;
+        padding: 20px;
+      }
+      body.wallet-stats-open #wallet-stats {
+        right: 0 !important;
+      }
+      #wallet-stats-toggle {
+        transition: right 0.3s ease;
+      }
+      body.wallet-stats-open .l-row.l-row-gap--xxs.u-flex-lg-row-reverse {
+        width: 100vw!important;
+      }
+    `;
+    document.head.appendChild(style);
 
     statsDiv.innerHTML = `
       <div class="c-info js-info" style="padding-bottom: 1em">
@@ -16,6 +122,37 @@ const dom = {
       </div>
     `;
 
+    statsDiv.insertBefore(closeBtn, statsDiv.firstChild);
+
+    let isOpen = false;
+
+    // Toggle function
+    const togglePanel = () => {
+      isOpen = !isOpen;
+      if (isOpen) {
+        statsDiv.classList.add('open');
+        floatingBtn.style.right = '420px';
+        document.body.classList.add('wallet-stats-open');
+        // Force layout recalculation
+        document.body.style.width = 'calc(100% - 400px)';
+      } else {
+        statsDiv.classList.remove('open');
+        floatingBtn.style.right = '20px';
+        document.body.classList.remove('wallet-stats-open');
+        // Reset layout
+        document.body.style.width = '100%';
+      }
+    };
+
+    // Add click handlers
+    floatingBtn.addEventListener('click', togglePanel);
+    closeBtn.addEventListener('click', togglePanel);
+
+    // Add both elements to body
+    document.body.appendChild(floatingBtn);
+    document.body.appendChild(statsDiv);
+
+    // Setup filter buttons (moved to after elements are added)
     setTimeout(() => {
       const filterBtn = document.getElementById('filter-bots-btn');
       const whalesBtn = document.getElementById('filter-whales-btn');

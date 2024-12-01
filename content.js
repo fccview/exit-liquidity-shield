@@ -4,11 +4,6 @@
   let allWalletStats = {};
   const statsDiv = dom.createStatsDiv();
 
-  const targetSection = document.querySelector('.p-show__widget.p-show__pair.u-py-s-lg');
-  if (targetSection) {
-    targetSection.appendChild(statsDiv);
-  }
-
   let processedTransactions = new Set();
   window.whaleTransactions = [];
   let whaleTransactions = window.whaleTransactions;

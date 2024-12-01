@@ -25,6 +25,10 @@
           "content.js"
         ]
       }
-    ]
+    ],
+    "web_accessible_resources": [{
+        "resources": ["icons/*"],
+        "matches": ["https://photon-sol.tinyastro.io/*"]
+    }]
 }
   
